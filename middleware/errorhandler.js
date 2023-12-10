@@ -1,43 +1,52 @@
 const { Constants } = require("../constants/Constants");
 
-const errorhandler = (err, req, res, next) => {
-    const statusCode = res.statusCode ? res.statusCode : 500;
-    switch (statusCode) {
-      case Constants.NOT_FOUND:
-        res.json({
-          title: "Not Found",
-          message: err.message,
-          stackTrace: err.stack,
-        });
-        break;
-      case Constants.VALIDATION_ERROR:
-        res.json({
-          title: "Validation Failed",
-          message: err.message,
-          stackTrace: err.stack,
-        });
-      case Constants.UNAUTHORIZED:
-        res.json({
-          title: "Unauthorized",
-          message: err.message,
-          stackTrace: err.stack,
-        });
-      case Constants.FORBIDDEN:
-        res.json({
-          title: "Forbidden",
-          message: err.message,
-          stackTrace: err.stack,
-        });
-      case Constants.SERVER_ERROR:
-        res.json({
-          title: "Server Error",
-          message: err.message,
-          stackTrace: err.stack,
-        });
+const errorHandler = (err, req, res, next) => {
+  const statusCode = err.statusCode || res.statusCode || constants.SERVER_ERROR;
+
+  let response;
+
+  switch (statusCode) {
+      case constants.VALIDATION_ERROR:
+          response = {
+              title: 'Validation failed',
+              message: err.message || 'Validation error',
+              stackTrace: err.stack || null,
+          };
+          break;
+      case constants.NOT_FOUND:
+          response = {
+              title: 'Not Found',
+              message: err.message || 'Resource not found',
+              stackTrace: err.stack || null,
+          };
+          break;
+      case constants.UNAUTHORIZED:
+          response = {
+              title: 'Unauthorized',
+              message: err.message || 'Unauthorized access',
+              stackTrace: err.stack || null,
+          };
+          break;
+      case constants.FORBIDDEN:
+          response = {
+              title: 'Forbidden error',
+              message: err.message || 'Forbidden access',
+              stackTrace: err.stack || null,
+          };
+          break;
+      case constants.SERVER_ERROR:
       default:
-          console.log("All good no error !")
-        break;
-    }
-  };
-  
-  module.exports = errorhandler;
+          response = {
+              title: 'Internal Server Error',
+              message: err.message || 'An unexpected error occurred',
+              stackTrace: err.stack || null,
+          };
+          break;
+  }
+  // Log the error for debugging purposes
+  console.error('Error caught by errorHandler:', err);
+
+  res.status(statusCode).json(response);
+};
+
+module.exports = errorHandler;

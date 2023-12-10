@@ -1,26 +1,31 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv").config();
-const mongoose = require("mongoose");
-const  router  = require("./routers/userRoutes");
-// const userRoutes = require("./routers/userRoutes");
+const mongoose = require("mongoose")
 const errorhandler = require("./middleware/errorhandler");
 const userRoutes = require("./routers/userRoutes");
+const cors = require('cors')
 
 const app = express();
 app.use(express.json());
 app.use(errorhandler)
 
+//Middleware -Cors
+app.use(cors());
+//Middleware - parse Json reuest body
+app.use(bodyParser.json());
 
-
+//Middleware - parse urlencoded reuest body
 app.use(bodyParser.urlencoded({ extended: false }));
 
-// app.use("/", (req, res, next) => {
-//   res.status(200).json({
-//     message: "Hello World!!",
-//   });
-// });
-
+//test route
+app.get("/", (req, res, next) => {
+  res.status(200).json({
+    message: "Hello World!!",
+  });
+});
+ 
+//Health Api
 app.get('/health',(req,res)=>{
   try {
     const serverName = "Job Listing Platform";
@@ -39,8 +44,7 @@ app.get('/health',(req,res)=>{
 });
 
 
-
-
+// Router initial point
 app.use('/user', userRoutes)
 
 //

@@ -7,10 +7,18 @@ dotenv.config()
 
 const User = require("../model/userSchema");
 
+const errorHandler = (res, error) =>{
+  console.error(error);
+  res.status(500).json({ error : 'Internal Server Error'})
+}
+
 const signUp = asyncHandler ( async (req, res) => {
     try {
       console.log("Received signup request:", req.body);
       const { userName, email, password,phone } = req.body;
+      if(!userName || !email|| !password || !phone){
+        return res.status(400).json({ error : 'All fields are required'})
+      }
       const encryptedPassword = await bcrypt.hash(password, 10);
   
       // Check if the email is already registered
@@ -37,10 +45,7 @@ const signUp = asyncHandler ( async (req, res) => {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({
-        status: "FAILED",
-        message: "Oops! Something went wrong.",
-      });
+      errorHandler(res, error)
     }
   });
 
@@ -48,6 +53,9 @@ const logIn = asyncHandler (async (req, res) => {
   console.log("Received login request:", req.body);
     try {
       const { email, password } = req.body;
+      if(!email || !password){
+        return res.status(400).json({ error : 'All fields are required'})
+      }
       const user = await User.findOne({ email });
       console.log(user);
       if (user) {
@@ -55,7 +63,7 @@ const logIn = asyncHandler (async (req, res) => {
   
         if (hasPasswordMatched) {
           const jwtToken = jwt.sign(user.toJSON(), process.env.JWT_SECRET, {
-            expiresIn: 60 * 300,
+            expiresIn: 60 * 30,
           });
           res.json({
             status: "SUCCESS",
@@ -76,10 +84,7 @@ const logIn = asyncHandler (async (req, res) => {
       }
     } catch (error) {
       console.error(error);
-      res.status(500).json({
-        status: "FAILED",
-        message: "Oops! Something went wrong.",
-      });
+      errorHandler(res, error)
     }
   });
 
