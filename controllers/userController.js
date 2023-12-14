@@ -15,8 +15,8 @@ const errorHandler = (res, error) =>{
 const signUp = asyncHandler ( async (req, res) => {
     try {
       console.log("Received signup request:", req.body);
-      const { userName, email, password,phone } = req.body;
-      if(!userName || !email|| !password || !phone){
+      const { recruiterName,userName, email, password,phone } = req.body;
+      if(!recruiterName || !userName || !email|| !password || !phone){
         return res.status(400).json({ error : 'All fields are required'})
       }
       const encryptedPassword = await bcrypt.hash(password, 10);
@@ -32,6 +32,7 @@ const signUp = asyncHandler ( async (req, res) => {
   
       // Create a new user
       const newUser = new User({
+        recruiterName,
         userName,
         email,
         password: encryptedPassword,
@@ -42,6 +43,7 @@ const signUp = asyncHandler ( async (req, res) => {
       res.json({
         status: "SUCCESS",
         message: "You've signed up successfully!",
+        recruiterName:newUser.recruiterName
       });
     } catch (error) {
       console.error(error);
@@ -69,6 +71,8 @@ const logIn = asyncHandler (async (req, res) => {
             status: "SUCCESS",
             message: "You've logged In successfully!",
             jwtToken,
+            recruiterName:user.recruiterName
+
           });
         } else {
           res.json({

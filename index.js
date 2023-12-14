@@ -39,13 +39,14 @@ app.get('/health',(req,res)=>{
     };
     res.json(healthInfo);
   } catch (err) {
-    throw new Error({ })
+    throw new Error('Something went wrong!!')
   }
 });
 
 
 // Router initial point
 app.use('/user', userRoutes)
+
 
 //
 mongoose

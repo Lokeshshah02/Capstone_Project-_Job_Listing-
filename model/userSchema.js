@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       require: true,
      },
+     recruiterName: {
+      type: String,
+      required: [true, "Please add the recruiter name"],
+    },
     userName: {
       type: String,
       required: [true, "Please add the user full name"],
