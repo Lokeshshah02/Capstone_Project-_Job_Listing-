@@ -19,14 +19,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 //test route
-app.get("/", (req, res, next) => {
+app.get("/", ( res) => {
   res.status(200).json({
     message: "Hello World!!",
   });
 });
  
 //Health Api
-app.get('/health',(req,res)=>{
+app.get('/health',(res)=>{
   try {
     const serverName = "Job Listing Platform";
     const currentTime = new Date().toLocaleString();

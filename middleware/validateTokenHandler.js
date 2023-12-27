@@ -1,25 +1,30 @@
-const asyncHandler = require('express-async-handler')
+const asyncHandler = require('../middleware/asyncHandler')
 const jwt = require('jsonwebtoken')
+require('dotenv').config();
 
-const validateToken = asyncHandler (async(req, res, next) => {
-    let token;
-    let authHeader = req.headers.Authorization || req.headers.authorization;
-    if(authHeader && authHeader.startsWith('Bearer')){
-        token = authHeader.split(" ")[1];
-        jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-            if(err){
-                res.status(401);
-                throw new Error("User is not authorized");
-            }
-            // console.log(decoded);
-            req.user = decoded.user;
-            next();
-        })
-        if(!token){
-           res.status(401);
-           throw new Error("User is not authorized or missing token")
+
+const validateTokenHandler = asyncHandler(async(req,res,next)=>{
+   const accessToken = req.headers.authorization || req.headers.Authorization
+   console.log(accessToken)
+   console.log("requesting body", req.body)
+    
+   if(accessToken && accessToken.startsWith("Bearer")){
+    const token = accessToken.split(" ")[1]
+    jwt.verify(token, process.env.JWT_SECRET, (error, decoded) => {
+        if (error) {
+          res.status(400);
+          throw new Error("User is not authorized");
         }
-    }
+        req.body.user = decoded.user;
+        next();
+      });
+      
+   }else{
+       res.status(400)
+       throw new Error("Token is missing")
+   }
+   
 })
 
-module.exports = validateToken;
+
+module.exports = validateTokenHandler;

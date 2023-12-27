@@ -15,12 +15,11 @@ const errorHandler = (res, error) =>{
 const signUp = asyncHandler ( async (req, res) => {
     try {
       console.log("Received signup request:", req.body);
-      const { recruiterName,userName, email, password,phone } = req.body;
-      if(!recruiterName || !userName || !email|| !password || !phone){
+      const { userName, email, password,phone } = req.body;
+      if( !userName || !email|| !password || !phone){
         return res.status(400).json({ error : 'All fields are required'})
       }
       const encryptedPassword = await bcrypt.hash(password, 10);
-  
       // Check if the email is already registered
       const existingUser = await User.findOne({ email });
       if (existingUser) {
@@ -29,21 +28,24 @@ const signUp = asyncHandler ( async (req, res) => {
           message: "Email is already registered",
         });
       }
-  
+      
       // Create a new user
-      const newUser = new User({
-        recruiterName,
+      const newUser = new User({    
         userName,
         email,
         password: encryptedPassword,
         phone,
       });
       await newUser.save();
+      const jwtToken = jwt.sign(newUser.toJSON(), process.env.JWT_SECRET, {
+        expiresIn: 60 * 30,
+      });
       console.log("User saved:", newUser);
       res.json({
         status: "SUCCESS",
+        jwtToken,
         message: "You've signed up successfully!",
-        recruiterName:newUser.recruiterName
+        recruiterName:newUser.userName
       });
     } catch (error) {
       console.error(error);

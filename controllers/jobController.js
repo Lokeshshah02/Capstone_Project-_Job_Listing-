@@ -1,13 +1,15 @@
-const asyncHandler = require("express-async-handler");
+const asyncHandler = require("../middleware/asyncHandler");
 const dotenv = require("dotenv");
 const job = require("../model/jobSchema");
 const jwt = require("jsonwebtoken");
+const User = require("../model/userSchema")
 
 //create job-post
-const jobPost = asyncHandler(async (req, res, next) => {
-  try {
-    const {
-      recruiterName,
+const jobPost = asyncHandler(async(req,res)=>{
+
+  //1. token is getting validated before creating a job post  
+  const {
+    // recruiterName,
       companyName,
       addLogoUrl,
       jobPosition,
@@ -18,86 +20,130 @@ const jobPost = asyncHandler(async (req, res, next) => {
       jobDescription,
       aboutCompany,
       skills,
-      information,
-    } = req.body;
+      information} = req.body;  
 
-    // Validate the user's token
-    const { jwttoken } = req.headers;
-    // console.log("receiver token", jwttoken)
+      let skillsArray = skills;
+      if(typeof skills === "string"){
+          skillsArray= skills.split(',').map(skill => skill.trim())
+      }
 
-    if (!jwttoken) {
-      return res.status(401).json({ message: "Token not provided" });
-    }
+      if( !companyName || !addLogoUrl || !jobPosition || !monthlySalary || !jobType || !remote ||!location || !jobDescription || !aboutCompany || !skills || !information){
+          res.status(400)
+          throw new Error("Please enter all the fields")
+      }      
+    
+  const newJob = await job.create({
+      companyName,addLogoUrl,jobPosition,monthlySalary,jobType,remote,location,jobDescription,aboutCompany,skills,information
+  })
 
-    // Remove the "Bearer " prefix from the token
-    const tokenWithoutBearer = jwttoken.replace("Bearer ", "");
-
-    let userData;
-    try {
-      userData = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET);
-    } catch (error) {
-      console.error("JWT verification error:", error);
-      return res.status(401).json({
-        status: "FAILED",
-        message: "Invalid Token",
-      });
-    }
-
-    const userId = userData._id;
-    // Check if a job post already exists for the given userId
-    const existingJob = await job.findOne({ userId });
-
-    if (existingJob) {
-      return res.status(400).json({ message: "Job post already exists" });
-    }
-
-    // Validate other fields
-    if (
-      !recruiterName ||
-      !companyName ||
-      !addLogoUrl ||
-      !jobPosition ||
-      !monthlySalary ||
-      !jobType ||
-      !remote ||
-      !location ||
-      !jobDescription ||
-      !aboutCompany ||
-      !skills ||
-      !information
-    ) {
-      return res.status(400).json({ message: "Please enter all the fields" });
-    }
-
-    // Create a new job post
-    const newJob = await job.create({
-      userId,
-      recruiterName,
-      companyName,
-      addLogoUrl,
-      jobPosition,
-      monthlySalary,
-      jobType,
-      remote,
-      location,
-      jobDescription,
-      aboutCompany,
-      skills,
-      information,
-    });
-
-    if (newJob) {
-      return res.status(201).json({
-        message: "Job post successfully posted",
-        _id: newJob.id,
-      });
-    } else {
-      return res.status(400).json({ message: "Invalid job data" });
-    }
-  } catch (err) {
-    throw new Error("some thing went wron!");
+  if(newJob){
+      res.status(201).json({message:"Job successfully Posted", _id : newJob.id})
+  }else{
+      res.status(400)
+      throw new Error("Invalid Job data")
   }
-});
+})
+
+
+// const jobPost = asyncHandler(async (req, res,) => {
+//   try {
+//     const {
+//       // recruiterName,
+//       companyName,
+//       addLogoUrl,
+//       jobPosition,
+//       monthlySalary,
+//       jobType,
+//       remote,
+//       location,
+//       jobDescription,
+//       aboutCompany,
+//       skills,
+//       information,
+//     } = req.body;
+// console.log("job post :",req.body)
+//     // Validate the user's token
+//     const { jwttoken } = req.headers;
+//     console.log("received token", jwttoken)
+
+//     if (!jwttoken) {
+//       return res.status(401).json({ message: "Token not provided" });
+//     }
+
+//     // Remove the "Bearer " prefix from the token
+//     const tokenWithoutBearer = jwttoken.replace("Bearer ", "");
+
+//     let userData;
+//     try {
+//       userData = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET);
+//     } catch (error) {
+//       console.error("JWT verification error:", error);
+//       return res.status(401).json({
+//         status: "FAILED",
+//         message: "Invalid Token",
+//       });
+//     }
+
+//     const userId = userData._id;
+//     // Check if a job post already exists for the given userId
+//     const existingJob = await job.findOne({ userId });
+
+//     if (existingJob) {
+//       return res.status(400).json({ message: "Job post already exists" });
+//     }
+
+//     // Validate other fields
+//     if (
+//       // !recruiterName ||
+//       !companyName ||
+//       !addLogoUrl ||
+//       !jobPosition ||
+//       !monthlySalary ||
+//       !jobType ||
+//       !remote ||
+//       !location ||
+//       !jobDescription ||
+//       !aboutCompany ||
+//       !skills ||
+//       !information
+//     ) {
+//       return res.status(400).json({ message: "Please enter all the fields" });
+//     }
+//         console.log("Fields:", companyName, addLogoUrl, jobPosition, monthlySalary, jobType, remote, location, jobDescription, aboutCompany, skills, information);
+
+
+//     // Create a new job post
+//     const newJob = await job.create({
+//       // userId,
+//       // recruiterName,
+//       companyName,
+//       addLogoUrl,
+//       jobPosition,
+//       monthlySalary,
+//       jobType,
+//       remote,
+//       location,
+//       jobDescription,
+//       aboutCompany,
+//       skills,
+//       information,
+//     });
+//     console.log("created job", newJob)
+
+//     if (newJob) {
+//       return res.status(201).json({
+//         message: "Job post successfully posted",
+//         _id: newJob.id,
+//       });
+//     } else {
+//       return res.status(400).json({ message: "Invalid job data" });
+//     }
+//   } catch (err) {
+//     throw new Error("some thing went wrong!");
+//   }
+// });
+
+
 
 //update job-post
 const updateJobPost = asyncHandler(async (req, res, next) => {
@@ -213,7 +259,7 @@ const getJobDescription = asyncHandler(async (req, res) => {
     const { jobDescription } = fetchJobDesc;
     res.status(200).json({
       message: "success",
-      fetchJobDesc: { _id, jobDescription },
+      fetchJobDesc: { _id, jobDescription},
     });
   } catch (error) {
     res
@@ -222,4 +268,82 @@ const getJobDescription = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { jobPost, updateJobPost, filterBySkills, getJobDescription };
+//get all jobs
+const getAllJobs = asyncHandler(async (req, res) => {
+  try {
+    const allJobs = await job.find();
+    console.log("all jobs",allJobs)
+
+    const extractedJobs = allJobs.map((job) => ({
+      _id: job._id,
+      companyName: job.companyName,
+      addLogoUrl: job.addLogoUrl,
+      jobPosition: job.jobPosition,
+      monthlySalary: job.monthlySalary,
+      jobType: job.jobType,
+      remote: job.remote,
+      location: job.location,
+      jobDescription: job.jobDescription,
+      aboutCompany: job.aboutCompany,
+      skills: job.skills,
+      information: job.information,
+    }));
+
+    res.status(200).json({
+      message: "success",
+      job: extractedJobs,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+});
+
+//View job details
+const viewJobDetails = asyncHandler(async (req, res) => {
+  const { _id } = req.query;
+  try {
+    const fetchJobDesc = await job.findById(_id);
+    if (!fetchJobDesc) {
+      res.status(404).json({ message: "Job Description not found!" });
+      return;
+    }
+    const {
+      companyName,
+      addLogoUrl,
+      jobPosition,
+      monthlySalary,
+      jobType,
+      remote,
+      location,
+      jobDescription,
+      aboutCompany,
+      skills,
+      information,
+    } = fetchJobDesc;
+
+    res.status(200).json({
+      message: "success",
+      jobPosts: {
+        _id,
+        companyName,
+        addLogoUrl,
+        jobPosition,
+        monthlySalary,
+        jobType,
+        remote,
+        location,
+        jobDescription,
+        aboutCompany,
+        skills,
+        information,
+      },
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+});
+
+
+module.exports = { jobPost, updateJobPost, filterBySkills, getJobDescription , viewJobDetails, getAllJobs};
