@@ -2,150 +2,73 @@ const asyncHandler = require("../middleware/asyncHandler");
 const dotenv = require("dotenv");
 const job = require("../model/jobSchema");
 const jwt = require("jsonwebtoken");
-const User = require("../model/userSchema")
+const User = require("../model/userSchema");
 
 //create job-post
-const jobPost = asyncHandler(async(req,res)=>{
-
-  //1. token is getting validated before creating a job post  
+const jobPost = asyncHandler(async (req, res) => {
+  //1. token is getting validated before creating a job post
   const {
     // recruiterName,
-      companyName,
-      addLogoUrl,
-      jobPosition,
-      monthlySalary,
-      jobType,
-      remote,
-      location,
-      jobDescription,
-      aboutCompany,
-      skills,
-      information} = req.body;  
+    companyName,
+    addLogoUrl,
+    jobPosition,
+    monthlySalary,
+    jobType,
+    remote,
+    location,
+    jobDescription,
+    aboutCompany,
+    skills,
+    information,
+  } = req.body;
 
-      let skillsArray = skills;
-      if(typeof skills === "string"){
-          skillsArray= skills.split(',').map(skill => skill.trim())
-      }
-
-      if( !companyName || !addLogoUrl || !jobPosition || !monthlySalary || !jobType || !remote ||!location || !jobDescription || !aboutCompany || !skills || !information){
-          res.status(400)
-          throw new Error("Please enter all the fields")
-      }      
-    
-  const newJob = await job.create({
-      companyName,addLogoUrl,jobPosition,monthlySalary,jobType,remote,location,jobDescription,aboutCompany,skills,information
-  })
-
-  if(newJob){
-      res.status(201).json({message:"Job successfully Posted", _id : newJob.id})
-  }else{
-      res.status(400)
-      throw new Error("Invalid Job data")
+  let skillsArray = skills;
+  if(typeof skills === "string"){
+      skillsArray=skills.split(',').map(skill => skill.trim())
   }
-})
+
+  if (
+    !companyName ||
+    !addLogoUrl ||
+    !jobPosition ||
+    !monthlySalary ||
+    !jobType ||
+    !remote ||
+    !location ||
+    !jobDescription ||
+    !aboutCompany ||
+    !skills ||
+    !information
+  ) {
+    res.status(400);
+    throw new Error("Please enter all the fields");
+  }
+
+  const newJob = await job.create({
+    companyName,
+    addLogoUrl,
+    jobPosition,
+    monthlySalary,
+    jobType,
+    remote,
+    location,
+    jobDescription,
+    aboutCompany,
+    skills: skillsArray,
+    information,
+  });
+
+  if (newJob) {
+    res
+      .status(201)
+      .json({ message: "Job successfully Posted", _id: newJob.id });
+  } else {
+    res.status(400);
+    throw new Error("Invalid Job data");
+  }
+});
 
 
-// const jobPost = asyncHandler(async (req, res,) => {
-//   try {
-//     const {
-//       // recruiterName,
-//       companyName,
-//       addLogoUrl,
-//       jobPosition,
-//       monthlySalary,
-//       jobType,
-//       remote,
-//       location,
-//       jobDescription,
-//       aboutCompany,
-//       skills,
-//       information,
-//     } = req.body;
-// console.log("job post :",req.body)
-//     // Validate the user's token
-//     const { jwttoken } = req.headers;
-//     console.log("received token", jwttoken)
-
-//     if (!jwttoken) {
-//       return res.status(401).json({ message: "Token not provided" });
-//     }
-
-//     // Remove the "Bearer " prefix from the token
-//     const tokenWithoutBearer = jwttoken.replace("Bearer ", "");
-
-//     let userData;
-//     try {
-//       userData = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET);
-//     } catch (error) {
-//       console.error("JWT verification error:", error);
-//       return res.status(401).json({
-//         status: "FAILED",
-//         message: "Invalid Token",
-//       });
-//     }
-
-//     const userId = userData._id;
-//     // Check if a job post already exists for the given userId
-//     const existingJob = await job.findOne({ userId });
-
-//     if (existingJob) {
-//       return res.status(400).json({ message: "Job post already exists" });
-//     }
-
-//     // Validate other fields
-//     if (
-//       // !recruiterName ||
-//       !companyName ||
-//       !addLogoUrl ||
-//       !jobPosition ||
-//       !monthlySalary ||
-//       !jobType ||
-//       !remote ||
-//       !location ||
-//       !jobDescription ||
-//       !aboutCompany ||
-//       !skills ||
-//       !information
-//     ) {
-//       return res.status(400).json({ message: "Please enter all the fields" });
-//     }
-//         console.log("Fields:", companyName, addLogoUrl, jobPosition, monthlySalary, jobType, remote, location, jobDescription, aboutCompany, skills, information);
-
-
-//     // Create a new job post
-//     const newJob = await job.create({
-//       // userId,
-//       // recruiterName,
-//       companyName,
-//       addLogoUrl,
-//       jobPosition,
-//       monthlySalary,
-//       jobType,
-//       remote,
-//       location,
-//       jobDescription,
-//       aboutCompany,
-//       skills,
-//       information,
-//     });
-//     console.log("created job", newJob)
-
-//     if (newJob) {
-//       return res.status(201).json({
-//         message: "Job post successfully posted",
-//         _id: newJob.id,
-//       });
-//     } else {
-//       return res.status(400).json({ message: "Invalid job data" });
-//     }
-//   } catch (err) {
-//     throw new Error("some thing went wrong!");
-//   }
-// });
-
-
-
-//update job-post
 const updateJobPost = asyncHandler(async (req, res, next) => {
   try {
     const {
@@ -204,48 +127,29 @@ const updateJobPost = asyncHandler(async (req, res, next) => {
   }
 });
 
-//fliter job post by skills
-const filterBySkills = asyncHandler(async (req, res) => {
-  try {
-    const { skills, jobPosition } = req.query;
-    console.log("skills :", skills, jobPosition);
+const filterBySkills = asyncHandler(async(req,res)=>{
 
-    if (!skills || !jobPosition) {
-      return res.status(400).json({
-        message: "Skills and jobPosition are required parameters",
-      });
-    }
+  const {jobPosition, skills} = req.query;
 
-    const matchingData = await job.find({
-      $or: [
-        { skills: { $in: Array.isArray(skills) ? skills : [skills] } },
-        {
-          jobPosition: {
-            $in: Array.isArray(jobPosition) ? jobPosition : [jobPosition],
-          },
-        },
-      ],
-    });
+  let query = {}
 
-    console.log("matchingSkills and positions :", matchingData);
-
-    if (matchingData.length === 0) {
-      res.status(404).json({
-        message: "No post found related to provided skills and jobPosition",
-      });
-    } else {
-      res.status(200).json({
-        message: "successful",
-        data: matchingData,
-      });
-    }
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      message: "Something went wrong!",
-    });
+  if(jobPosition){
+    query.jobPosition = jobPosition;
   }
-});
+
+  if(skills){
+    query.skills = { $in : skills.split("&")};
+  }
+  console.log(query)
+  const jobPost = await job.find(query).sort({createdAt: -1})
+  if(jobPost){
+    res.status(200).json({jobPost})
+  }else{
+    res.status(400)
+    throw new Error("Job post not found")
+  }
+   
+})
 
 //get a single job description
 const getJobDescription = asyncHandler(async (req, res) => {
@@ -259,7 +163,7 @@ const getJobDescription = asyncHandler(async (req, res) => {
     const { jobDescription } = fetchJobDesc;
     res.status(200).json({
       message: "success",
-      fetchJobDesc: { _id, jobDescription},
+      fetchJobDesc: { _id, jobDescription },
     });
   } catch (error) {
     res
@@ -271,8 +175,8 @@ const getJobDescription = asyncHandler(async (req, res) => {
 //get all jobs
 const getAllJobs = asyncHandler(async (req, res) => {
   try {
-    const allJobs = await job.find();
-    console.log("all jobs",allJobs)
+    const allJobs = await job.find().sort({ _id: -1 });
+    console.log("all jobs", allJobs);
 
     const extractedJobs = allJobs.map((job) => ({
       _id: job._id,
@@ -294,13 +198,17 @@ const getAllJobs = asyncHandler(async (req, res) => {
       job: extractedJobs,
     });
   } catch (error) {
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 });
 
 //View job details
 const viewJobDetails = asyncHandler(async (req, res) => {
   const { _id } = req.query;
+  console.log('Received _id:', _id); // Log the _id parameter
+
   try {
     const fetchJobDesc = await job.findById(_id);
     if (!fetchJobDesc) {
@@ -345,5 +253,26 @@ const viewJobDetails = asyncHandler(async (req, res) => {
   }
 });
 
+//get a single job post
+const singleJobPost = asyncHandler(async(req,res)=>{
+  const{_id} = req.query
 
-module.exports = { jobPost, updateJobPost, filterBySkills, getJobDescription , viewJobDetails, getAllJobs};
+  const fetchJob = await job.findOne({_id})
+  if(!fetchJob){
+    res.status(400)
+      throw new Error({message:"Job post not found with given id"})
+    }else{
+      res.status(200).json({message: "SUCCESS", fetchJob})
+    }
+  
+})
+
+module.exports = {
+  jobPost,
+  updateJobPost,
+  filterBySkills,
+  getJobDescription,
+  viewJobDetails,
+  getAllJobs,
+  singleJobPost
+};

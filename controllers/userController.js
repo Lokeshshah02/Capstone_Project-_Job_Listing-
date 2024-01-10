@@ -73,7 +73,7 @@ const logIn = asyncHandler (async (req, res) => {
             status: "SUCCESS",
             message: "You've logged In successfully!",
             jwtToken,
-            recruiterName:user.recruiterName
+            recruiterName:user.userName
 
           });
         } else {
